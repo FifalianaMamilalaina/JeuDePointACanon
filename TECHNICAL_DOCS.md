@@ -14,18 +14,16 @@ Le projet utilise une architecture de type **N-Tier** simplifiée :
 
 ### 1. Moteur de Jeu (`GameLogic.cs`)
 C'est le fichier le plus critique pour les règles.
-* **Taille de Grille** : La grille est stockée dans un tableau 2D `int[width + 1, height + 1]` car nous jouons sur les intersections.
-* **Algorithme de Victoire** : Utilise une recherche bidirectionnelle dans 4 axes (Horizontal, Vertical, 2 Diagonales).
-* **Validation de Partage** : `SharesMoreThanOnePointWithAnyExistingLine` itère sur `allLines` pour garantir qu'un nouveau coup ne crée pas une ligne trop proche d'une ancienne.
-* **Intersection de Diagonales** : `DoesLineCrossOpponent` détecte si un segment diagonal traverse un segment adverse en vérifiant les "croisements en X".
+* **Taille de Grille** : La grille est stockée dans un tableau 2D `int[width, height]`. Contrairement à la version initiale, `GridWidth` et `GridHeight` représentent désormais le nombre exact d'intersections (lignes de points) et non le nombre de cases.
+* **Algorithme de Victoire** : Lorsqu'un alignement de 5 points ou plus est détecté, le jeu extrait un segment d'**exactement 5 points** incluant la pièce posée. C'est ce segment qui est validé comme ligne gagnante.
+* **Validation de Partage** : `SharesMoreThanOnePointWithAnyExistingLine` garantit qu'une nouvelle ligne ne partage pas plus d'un point avec une ligne existante.
+* **Intersection de Diagonales** : `DoesLineCrossOpponent` empêche de croiser physiquement une ligne adverse.
 
 ### 2. Interface de Jeu (`GameForm.cs`)
 Gère le rendu graphique et les événements.
-* **Rendu GDI+** : Tout le plateau est dessiné dans l'événement `GridPanel_Paint`. 
-    * `SmoothingMode.AntiAlias` est activé pour des points lisses.
-    * Les points sont dessinés via `FillEllipse` centrés sur les coordonnées d'intersection.
-* **Animation de la Balle** : Utilise un `System.Windows.Forms.Timer` (30ms). À chaque tick, la position de la balle est mise à jour (`ballX`, `ballY`) et une détection de collision est faite en comparant la distance aux intersections.
-* **Gestion du Focus** : `KeyPreview = true` permet à la fenêtre de capturer les flèches directionnelles et les raccourcis Ctrl même si un bouton a le focus.
+* **Rendu GDI+** : Le plateau dessine `GridWidth` lignes verticales et `GridHeight` lignes horizontales.
+* **Animation de la Balle** : En mode tir, le mouvement est **uniquement horizontal**. La collision est détectée en vérifiant la proximité avec les intersections de la ligne sur laquelle se trouve le canon.
+* **Gestion du Tour après Tir** : La méthode `EndShot` vérifie si une cible a été touchée. Si oui, le turn n'est pas incrémenté, permettant au tireur de rejouer.
 
 ### 3. Persistance (`DatabaseService.cs`)
 Utilise la bibliothèque `Npgsql`.
@@ -50,8 +48,8 @@ Rendez-vous dans `GameForm.cs` -> `GridPanel_Paint`.
 
 ### Ajuster la Puissance des Canons
 La logique se trouve dans `GameForm.cs` -> `FireBall`.
-* Le facteur de vitesse est défini par `float speed = 5;`.
-* La distance max (`ballMaxDist`) suit la règle de trois basée sur `shotPower`.
+* La distance max (`ballMaxDist`) suit la règle de trois basée sur `shotPower` (1-9) et la largeur réelle de la grille (`game.GridWidth`).
+* Une puissance de 9 permet de traverser toute la largeur configurée.
 
 ---
 
