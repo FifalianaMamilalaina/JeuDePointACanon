@@ -140,9 +140,27 @@ namespace PointGame.Services
 
                 if (currentLine.Count >= 5)
                 {
-                    if (!DoesLineCrossOpponent(currentLine, player) && !SharesMoreThanOnePointWithAnyExistingLine(currentLine))
+                    Point pXY = new Point(x, y);
+                    int targetIdx = currentLine.IndexOf(pXY);
+                    
+                    for (int i = 0; i <= currentLine.Count - 5; i++)
                     {
-                        wins.Add(new WinResult { IsWin = true, StartWinPoint = start, EndWinPoint = end, Player = player, Points = currentLine });
+                        if (i <= targetIdx && i + 4 >= targetIdx)
+                        {
+                            var subLine = currentLine.GetRange(i, 5);
+                            if (!DoesLineCrossOpponent(subLine, player) && !SharesMoreThanOnePointWithAnyExistingLine(subLine))
+                            {
+                                wins.Add(new WinResult 
+                                { 
+                                    IsWin = true, 
+                                    StartWinPoint = subLine[0], 
+                                    EndWinPoint = subLine[4], 
+                                    Player = player, 
+                                    Points = subLine 
+                                });
+                                break; // only count one line per direction
+                            }
+                        }
                     }
                 }
             }

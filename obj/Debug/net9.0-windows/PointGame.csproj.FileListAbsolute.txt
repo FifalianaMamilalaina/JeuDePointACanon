@@ -17,3 +17,4 @@ D:\ITU\S6\ProgS4\Jeu de points\PointGame\obj\Debug\net9.0-windows\refint\PointGa
 D:\ITU\S6\ProgS4\Jeu de points\PointGame\obj\Debug\net9.0-windows\PointGame.pdb
 D:\ITU\S6\ProgS4\Jeu de points\PointGame\obj\Debug\net9.0-windows\PointGame.genruntimeconfig.cache
 D:\ITU\S6\ProgS4\Jeu de points\PointGame\obj\Debug\net9.0-windows\ref\PointGame.dll
+D:\ITU\S6\ProgS4\Jeu de points\PointGame\obj\Debug\net9.0-windows\PointGame.sourcelink.json

@@ -23,24 +23,24 @@ namespace PointGame.Forms
         
         private List<WinResult> winLines = new List<WinResult>();
 
-        // Cannon state
+        // Cannon state (row index 0..GridHeight)
         private int cannon1Y;
         private int cannon2Y;
 
         // Shooting state
         private enum ActionMode { PlacePoint, Shoot }
         private ActionMode currentMode = ActionMode.PlacePoint;
-        private Point? targetCell = null;
-        private int shotPower = 0;
+        private int shotPower = 0; // 1-9
         private Label lblStatus;
 
-        // Ball animation
+        // Ball animation — moves purely horizontally
         private System.Windows.Forms.Timer ballTimer;
         private float ballX, ballY;
-        private float ballDx, ballDy;
+        private float ballDx;          // horizontal speed (+right, -left)
         private float ballDistTraveled;
         private float ballMaxDist;
         private bool ballFlying = false;
+        private int ballRow;           // grid row the ball travels on
 
         public GameForm(Game game, DatabaseService dbService)
         {
@@ -48,11 +48,10 @@ namespace PointGame.Forms
             this.dbService = dbService;
             this.logic = new GameLogic(game.GridWidth, game.GridHeight);
             
-            if (game.Id > 0) {
+            if (game.Id > 0)
                 this.moves = dbService.GetMoves(game.Id);
-            } else {
+            else
                 this.moves = new List<Move>();
-            }
             
             winLines = this.logic.ReplayAndGetWinLines(moves);
 
@@ -62,13 +61,11 @@ namespace PointGame.Forms
             this.KeyPreview = true;
             this.KeyDown += GameForm_KeyDown;
 
-            // Panel dimensions: grid has W*cellSize width and H*cellSize height
-            // Points sit on intersections (0..W, 0..H)
             int panelWidth = cannonMargin + game.GridWidth * cellSize + cannonMargin;
             int panelHeight = game.GridHeight * cellSize;
 
             UpdateFormTitle();
-            this.Size = new Size(Math.Max(500, panelWidth + 60), panelHeight + 140);
+            this.Size = new Size(Math.Max(560, panelWidth + 60), panelHeight + 140);
             this.StartPosition = FormStartPosition.CenterScreen;
 
             gridPanel = new Panel
@@ -78,6 +75,7 @@ namespace PointGame.Forms
                 BackColor = Color.White
             };
             gridPanel.Paint += GridPanel_Paint;
+            // In shoot mode, clicking the cannon areas repositions them
             gridPanel.MouseClick += GridPanel_MouseClick;
 
             int bottomY = panelHeight + 30;
@@ -91,22 +89,24 @@ namespace PointGame.Forms
                 if (currentMode == ActionMode.PlacePoint) {
                     currentMode = ActionMode.Shoot;
                     btnToggleMode.Text = "Switch to Place";
-                    targetCell = null; shotPower = 0;
+                    shotPower = 0;
                 } else {
                     currentMode = ActionMode.PlacePoint;
                     btnToggleMode.Text = "Switch to Shoot";
-                    targetCell = null; shotPower = 0;
+                    shotPower = 0;
                 }
                 UpdateStatus();
                 gridPanel.Invalidate();
             };
 
+            // Fire button: enabled when in shoot mode and power is selected
             Button btnFire = new Button { Text = "Fire!", Location = new Point(260, bottomY), Size = new Size(80, 30), Enabled = false };
             btnFire.Click += (s, e) => {
                 if (ballFlying) return;
-                if (currentMode == ActionMode.Shoot && targetCell.HasValue && shotPower > 0)
+                if (currentMode == ActionMode.Shoot && shotPower > 0)
                     FireBall();
             };
+            this.Tag = btnFire;
 
             lblStatus = new Label { Location = new Point(350, bottomY + 5), AutoSize = true, Font = new Font("Consolas", 9) };
             UpdateStatus();
@@ -117,32 +117,26 @@ namespace PointGame.Forms
             this.Controls.Add(btnFire);
             this.Controls.Add(lblStatus);
 
-            this.Tag = btnFire;
-
             ballTimer = new System.Windows.Forms.Timer { Interval = 30 };
             ballTimer.Tick += BallTimer_Tick;
         }
 
-        // Convert intersection grid coordinate to pixel X on the panel
         private int IntersectionPxX(int gx) => cannonMargin + gx * cellSize;
-        // Convert intersection grid coordinate to pixel Y on the panel
         private int IntersectionPxY(int gy) => gy * cellSize;
 
         private void UpdateStatus()
         {
+            int cannonRow = game.CurrentTurn == 1 ? cannon1Y : cannon2Y;
             if (currentMode == ActionMode.PlacePoint)
                 lblStatus.Text = $"Mode: Place Point | P{game.CurrentTurn}'s turn";
             else
             {
-                string tgt = targetCell.HasValue ? $"({targetCell.Value.X},{targetCell.Value.Y})" : "none";
-                string pwr = shotPower > 0 ? shotPower.ToString() : "none";
-                lblStatus.Text = $"Mode: Shoot | Target: {tgt} | Power: {pwr}";
+                string pwr = shotPower > 0 ? shotPower.ToString() : "none (Ctrl+1-9)";
+                lblStatus.Text = $"Mode: Shoot | Canon row: {cannonRow} | Power: {pwr}";
             }
 
             if (this.Tag is Button fireBtn)
-            {
-                fireBtn.Enabled = (currentMode == ActionMode.Shoot && targetCell.HasValue && shotPower > 0 && !ballFlying);
-            }
+                fireBtn.Enabled = (currentMode == ActionMode.Shoot && shotPower > 0 && !ballFlying);
         }
 
         private void BtnSave_Click(object sender, EventArgs e)
@@ -171,21 +165,25 @@ namespace PointGame.Forms
         {
             if (ballFlying) return;
 
+            // Arrow Up/Down move the active player's cannon
             if (e.KeyCode == Keys.Up)
             {
                 if (game.CurrentTurn == 1) { if (cannon1Y > 0) cannon1Y--; }
-                else { if (cannon2Y > 0) cannon2Y--; }
+                else                       { if (cannon2Y > 0) cannon2Y--; }
                 gridPanel.Invalidate();
+                UpdateStatus();
                 e.Handled = true;
             }
             else if (e.KeyCode == Keys.Down)
             {
                 if (game.CurrentTurn == 1) { if (cannon1Y < game.GridHeight) cannon1Y++; }
-                else { if (cannon2Y < game.GridHeight) cannon2Y++; }
+                else                       { if (cannon2Y < game.GridHeight) cannon2Y++; }
                 gridPanel.Invalidate();
+                UpdateStatus();
                 e.Handled = true;
             }
 
+            // Ctrl + 1-9 selects power
             if (currentMode == ActionMode.Shoot && e.Control)
             {
                 int num = -1;
@@ -203,73 +201,63 @@ namespace PointGame.Forms
         private void FireBall()
         {
             int cannonRow = game.CurrentTurn == 1 ? cannon1Y : cannon2Y;
-            
-            if (game.CurrentTurn == 1)
-                ballX = cannonMargin - 10;
-            else
-                ballX = cannonMargin + game.GridWidth * cellSize + 10;
-            
+            ballRow = cannonRow;
             ballY = IntersectionPxY(cannonRow);
 
-            float targetPxX = IntersectionPxX(targetCell.Value.X);
-            float targetPxY = IntersectionPxY(targetCell.Value.Y);
+            if (game.CurrentTurn == 1)
+            {
+                // P1: fires from left → right
+                ballX = cannonMargin - 10;
+                ballDx = 6f;
+            }
+            else
+            {
+                // P2: fires from right → left
+                ballX = cannonMargin + game.GridWidth * cellSize + 10;
+                ballDx = -6f;
+            }
 
-            float dx = targetPxX - ballX;
-            float dy = targetPxY - ballY;
-            float dist = (float)Math.Sqrt(dx * dx + dy * dy);
-            if (dist == 0) return;
-
-            // Power as rule of three: power/9 * max(gridW, gridH) cells
-            int maxDim = Math.Max(game.GridWidth, game.GridHeight);
-            ballMaxDist = ((float)shotPower / 9f) * maxDim * cellSize;
+            // Power = rule of three relative to gridWidth: power/9 * gridWidth cells
+            ballMaxDist = ((float)shotPower / 9f) * game.GridWidth * cellSize;
             ballDistTraveled = 0;
-
-            float speed = 5;
-            ballDx = dx / dist * speed;
-            ballDy = dy / dist * speed;
 
             ballFlying = true;
             ballTimer.Start();
+            UpdateStatus();
         }
 
         private void BallTimer_Tick(object sender, EventArgs e)
         {
             ballX += ballDx;
-            ballY += ballDy;
-            ballDistTraveled += (float)Math.Sqrt(ballDx * ballDx + ballDy * ballDy);
+            ballDistTraveled += Math.Abs(ballDx);
 
-            // Ball ran out of power
+            // Out of power
             if (ballDistTraveled >= ballMaxDist)
             {
                 EndShot(false);
                 return;
             }
 
-            // Check out of bounds
-            if (ballX < cannonMargin - 20 || ballX > cannonMargin + game.GridWidth * cellSize + 20 ||
-                ballY < -20 || ballY > game.GridHeight * cellSize + 20)
+            // Out of grid bounds
+            if (ballX < cannonMargin - 20 || ballX > cannonMargin + game.GridWidth * cellSize + 20)
             {
                 EndShot(false);
                 return;
             }
 
-            // Check proximity to every intersection point
+            // Check every intersection on the ball's row for a hit
             for (int gx = 0; gx <= game.GridWidth; gx++)
             {
-                for (int gy = 0; gy <= game.GridHeight; gy++)
+                float ipx = IntersectionPxX(gx);
+                float dist = Math.Abs(ballX - ipx);
+                if (dist < Math.Abs(ballDx) + 2) // close enough to snap to intersection
                 {
-                    float ipx = IntersectionPxX(gx);
-                    float ipy = IntersectionPxY(gy);
-                    float d = (float)Math.Sqrt((ballX - ipx) * (ballX - ipx) + (ballY - ipy) * (ballY - ipy));
-                    if (d < pointRadius)
+                    if (logic.RemovePoint(gx, ballRow, game.CurrentTurn))
                     {
-                        if (logic.RemovePoint(gx, gy, game.CurrentTurn))
-                        {
-                            moves.RemoveAll(m => m.X == gx && m.Y == gy);
-                            for (int i = 0; i < moves.Count; i++) moves[i].MoveOrder = i + 1;
-                            EndShot(true);
-                            return;
-                        }
+                        moves.RemoveAll(m => m.X == gx && m.Y == ballRow);
+                        for (int i = 0; i < moves.Count; i++) moves[i].MoveOrder = i + 1;
+                        EndShot(true); // hit → shooter keeps turn
+                        return;
                     }
                 }
             }
@@ -281,10 +269,11 @@ namespace PointGame.Forms
         {
             ballTimer.Stop();
             ballFlying = false;
-            targetCell = null;
             shotPower = 0;
 
-            game.CurrentTurn = game.CurrentTurn == 1 ? 2 : 1;
+            // If hit an opponent point → shooter keeps turn; otherwise pass
+            if (!hit)
+                game.CurrentTurn = game.CurrentTurn == 1 ? 2 : 1;
             
             UpdateFormTitle();
             UpdateStatus();
@@ -295,13 +284,13 @@ namespace PointGame.Forms
         {
             if (ballFlying) return;
 
-            // Snap to nearest intersection
             int gx = (int)Math.Round((double)(e.X - cannonMargin) / cellSize);
             int gy = (int)Math.Round((double)e.Y / cellSize);
+            gy = Math.Max(0, Math.Min(gy, game.GridHeight));
 
             if (currentMode == ActionMode.PlacePoint)
             {
-                if (logic.IsValidMove(gx, gy))
+                if (gx >= 0 && logic.IsValidMove(gx, gy))
                 {
                     var move = new Move
                     {
@@ -320,6 +309,7 @@ namespace PointGame.Forms
                         winLines.AddRange(wins);
                         if (game.CurrentTurn == 1) game.Player1Score += wins.Count;
                         else game.Player2Score += wins.Count;
+                        // Keep turn on score
                     }
                     else
                     {
@@ -333,30 +323,17 @@ namespace PointGame.Forms
             }
             else if (currentMode == ActionMode.Shoot)
             {
-                // Click on cannon area to position cannon
-                bool clickedCannonArea = false;
-                int snappedY = (int)Math.Round((double)e.Y / cellSize);
-                snappedY = Math.Max(0, Math.Min(snappedY, game.GridHeight));
-
+                // Click on cannon area to reposition it
+                int snappedY = gy;
                 if (game.CurrentTurn == 1 && e.X < cannonMargin)
                 {
                     cannon1Y = snappedY;
-                    clickedCannonArea = true;
+                    UpdateStatus();
+                    gridPanel.Invalidate();
                 }
                 else if (game.CurrentTurn == 2 && e.X > cannonMargin + game.GridWidth * cellSize)
                 {
                     cannon2Y = snappedY;
-                    clickedCannonArea = true;
-                }
-
-                if (clickedCannonArea)
-                {
-                    UpdateStatus();
-                    gridPanel.Invalidate();
-                }
-                else if (gx >= 0 && gx <= game.GridWidth && gy >= 0 && gy <= game.GridHeight)
-                {
-                    targetCell = new Point(gx, gy);
                     UpdateStatus();
                     gridPanel.Invalidate();
                 }
@@ -371,7 +348,7 @@ namespace PointGame.Forms
             DrawCannon(g, 1, cannon1Y, ColorTranslator.FromHtml(game.Player1Color));
             DrawCannon(g, 2, cannon2Y, ColorTranslator.FromHtml(game.Player2Color));
 
-            // Draw grid lines
+            // Grid lines
             Pen gridPen = new Pen(Color.LightGray, 1);
             for (int i = 0; i <= game.GridWidth; i++)
                 g.DrawLine(gridPen, IntersectionPxX(i), IntersectionPxY(0), IntersectionPxX(i), IntersectionPxY(game.GridHeight));
@@ -381,7 +358,16 @@ namespace PointGame.Forms
             Color c1 = ColorTranslator.FromHtml(game.Player1Color);
             Color c2 = ColorTranslator.FromHtml(game.Player2Color);
 
-            // Draw points on intersections
+            // Highlight cannon row when in shoot mode
+            if (currentMode == ActionMode.Shoot && !ballFlying)
+            {
+                int activeRow = game.CurrentTurn == 1 ? cannon1Y : cannon2Y;
+                int ry = IntersectionPxY(activeRow);
+                using var rowBrush = new SolidBrush(Color.FromArgb(30, Color.Orange));
+                g.FillRectangle(rowBrush, IntersectionPxX(0), ry - pointRadius, game.GridWidth * cellSize, pointRadius * 2);
+            }
+
+            // Points
             foreach (var m in moves)
             {
                 Color color = m.PlayerNumber == 1 ? c1 : c2;
@@ -391,7 +377,7 @@ namespace PointGame.Forms
                 g.FillEllipse(brush, px - pointRadius, py - pointRadius, pointRadius * 2, pointRadius * 2);
             }
 
-            // Draw win lines
+            // Win lines
             foreach (var win in winLines)
             {
                 Color color = win.Player == 1 ? c1 : c2;
@@ -400,18 +386,7 @@ namespace PointGame.Forms
                                 IntersectionPxX(win.EndWinPoint.X), IntersectionPxY(win.EndWinPoint.Y));
             }
 
-            // Draw target marker
-            if (currentMode == ActionMode.Shoot && targetCell.HasValue)
-            {
-                int tx = IntersectionPxX(targetCell.Value.X);
-                int ty = IntersectionPxY(targetCell.Value.Y);
-                using var targetPen = new Pen(Color.Red, 2);
-                g.DrawLine(targetPen, tx - 8, ty, tx + 8, ty);
-                g.DrawLine(targetPen, tx, ty - 8, tx, ty + 8);
-                g.DrawEllipse(targetPen, tx - 10, ty - 10, 20, 20);
-            }
-
-            // Draw ball
+            // Ball
             if (ballFlying)
             {
                 using var ballBrush = new SolidBrush(Color.Black);

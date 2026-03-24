@@ -1,0 +1,41 @@
+un jeu de points ou on a 2 joueurs, qui placent leurs points a tour de roles, puis, quand un joueur atteint 5 points alignes(horizontal,  vertical, oblique), on relie les points avec une ligne de la meme couleur 
+on peut choisir la taille du grille de jeu, la couleur de chaque joueur
+on utilise C# et postgres
+on sauvegarde les points ans postgre et l'etat d'un jeu aussi(on peu sauvegarder l'etat d'un jeu et charger apres a cet etat) mais on peu aussi commencer un nouveau jeu
+
+le jeu ne se termine pas, on compte juste les scores, et on auvegardde toujours le jeu(avec les dernier scores dans la base de donnees), on ne supprime jamais un jeu, sauf, on va avoir une option supprimer dans load pour ca
+
+
+on ne peut pas couper une ligne  adverse(meme si on a 5 points alignes)
+on ne peut pas superposer de points
+on ne peut pas utiliser de points (deja sur une ligne) pour generer une autre ligne
+
+niveau affichage:
+afficher dans la fenetre le nombre de points et a qui le tour
+pouvoir changer les noms des joueurs(quand on commence une nouvelle partie)
+
+
+on va mettre des canons sur les cotes gauche et droite tu plateau de jeu(1 canon un joueur mais les touches pour faire bouger les canons sont toujours fleche haut et bas vu qqu'il y aura des tours)
+ces canons peuvent se deplacer verticalement suivant la longueur du plateau
+a chaque tour, les joueurs auront 2 choix(soit poser un points), soit tirer une balle(qui sortira du canon)
+si poser un point, on garde la configuration actuelle
+si tirer une balle, on va avoir plusieurs etapes{
+    choisir des coordonnee(sur le plateau) grace a la souris
+    choisir la puissance(ctrl + chiffre) qui variera de 1 a 9
+    puis le bouton entree qui lancera la balle ddepuis le canon du joueur
+}
+logique de la balle, si elle touche un point(hors ligne), le point toucher se detruit et on peut a nouveau mettre un point a cet emplacement, la balle aussi disparait aussitot
+
+
+les points  sont poser sur les croisements des lignes
+la puissance fonctionne sous regle de trois: si on a une grille de 9*9 et on choisis 9, la balle  peut traverser jusqu'a la neuvieme case, si 1, elle s'arrete a la premiere et ainsi de suite
+la grille de jeu peu ne pas avoir la meme taille de longueur et largueur par exemple 8*9 ou un truucdans ce genre
+les balles d'un joueur ne peut pas supprimer ses propres points poser
+on choisi l'emplacement des canons par rapport a la grille avant de tirer
+
+la ligne se creer que quand on a 5 points alignes, pas plus ni moins
+quand on vise, c'est pas obliger que l'endroit oou l'on vise ce soit une intersection, pour la regle de trois, il peeut y avoir des nombres decimales
+
+apres tir, si on touche un point adverse, le tour lui reviens
+
+on ne vise pas, x est definit par la position du canon et y est definit par rapport a la puissance, la balle suit la ligne ou est placee le canon avant de tirer
