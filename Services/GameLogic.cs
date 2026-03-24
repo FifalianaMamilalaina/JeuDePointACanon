@@ -18,7 +18,6 @@ namespace PointGame.Services
     {
         private int width;  // number of cells horizontally
         private int height; // number of cells vertically
-        // Grid uses intersections: (width+1) x (height+1)
         private int[,] grid;
         public List<WinResult> allLines;
 
@@ -26,7 +25,7 @@ namespace PointGame.Services
         {
             this.width = width;
             this.height = height;
-            grid = new int[width + 1, height + 1];
+            grid = new int[width, height];
             allLines = new List<WinResult>();
         }
 
@@ -34,7 +33,7 @@ namespace PointGame.Services
         {
             foreach (var move in moves)
             {
-                if (move.X >= 0 && move.X <= width && move.Y >= 0 && move.Y <= height)
+                if (move.X >= 0 && move.X < width && move.Y >= 0 && move.Y < height)
                 {
                     grid[move.X, move.Y] = move.PlayerNumber;
                 }
@@ -44,11 +43,11 @@ namespace PointGame.Services
         public List<WinResult> ReplayAndGetWinLines(List<Move> moves)
         {
             allLines.Clear();
-            grid = new int[width + 1, height + 1];
+            grid = new int[width, height];
 
             foreach (var m in moves)
             {
-                if (m.X >= 0 && m.X <= width && m.Y >= 0 && m.Y <= height)
+                if (m.X >= 0 && m.X < width && m.Y >= 0 && m.Y < height)
                 {
                     grid[m.X, m.Y] = m.PlayerNumber;
                     var wins = CheckWin(m.X, m.Y, m.PlayerNumber);
@@ -63,7 +62,7 @@ namespace PointGame.Services
 
         public bool IsValidMove(int x, int y)
         {
-            if (x < 0 || x > width || y < 0 || y > height) return false;
+            if (x < 0 || x >= width || y < 0 || y >= height) return false;
             return grid[x, y] == 0;
         }
 
@@ -92,7 +91,7 @@ namespace PointGame.Services
 
         public bool RemovePoint(int x, int y, int shooterPlayer)
         {
-            if (x < 0 || x > width || y < 0 || y > height) return false;
+            if (x < 0 || x >= width || y < 0 || y >= height) return false;
             if (grid[x, y] == 0) return false;
             if (grid[x, y] == shooterPlayer) return false; // Cannot destroy own points
             if (IsPointInLine(x, y)) return false; // Cannot destroy line points
@@ -124,7 +123,7 @@ namespace PointGame.Services
                 {
                     int nx = x + dir[0] * i;
                     int ny = y + dir[1] * i;
-                    if (nx < 0 || nx > width || ny < 0 || ny > height || grid[nx, ny] != player) break;
+                    if (nx < 0 || nx >= width || ny < 0 || ny >= height || grid[nx, ny] != player) break;
                     end = new Point(nx, ny);
                     currentLine.Add(end);
                 }
@@ -133,7 +132,7 @@ namespace PointGame.Services
                 {
                     int nx = x - dir[0] * i;
                     int ny = y - dir[1] * i;
-                    if (nx < 0 || nx > width || ny < 0 || ny > height || grid[nx, ny] != player) break;
+                    if (nx < 0 || nx >= width || ny < 0 || ny >= height || grid[nx, ny] != player) break;
                     start = new Point(nx, ny);
                     currentLine.Insert(0, start);
                 }

@@ -61,8 +61,8 @@ namespace PointGame.Forms
             this.KeyPreview = true;
             this.KeyDown += GameForm_KeyDown;
 
-            int panelWidth = cannonMargin + game.GridWidth * cellSize + cannonMargin;
-            int panelHeight = game.GridHeight * cellSize;
+            int panelWidth = cannonMargin + Math.Max(0, game.GridWidth - 1) * cellSize + cannonMargin;
+            int panelHeight = Math.Max(0, game.GridHeight - 1) * cellSize;
 
             UpdateFormTitle();
             this.Size = new Size(Math.Max(560, panelWidth + 60), panelHeight + 140);
@@ -176,8 +176,8 @@ namespace PointGame.Forms
             }
             else if (e.KeyCode == Keys.Down)
             {
-                if (game.CurrentTurn == 1) { if (cannon1Y < game.GridHeight) cannon1Y++; }
-                else                       { if (cannon2Y < game.GridHeight) cannon2Y++; }
+                if (game.CurrentTurn == 1) { if (cannon1Y < game.GridHeight - 1) cannon1Y++; }
+                else                       { if (cannon2Y < game.GridHeight - 1) cannon2Y++; }
                 gridPanel.Invalidate();
                 UpdateStatus();
                 e.Handled = true;
@@ -213,7 +213,7 @@ namespace PointGame.Forms
             else
             {
                 // P2: fires from right → left
-                ballX = cannonMargin + game.GridWidth * cellSize + 10;
+                ballX = cannonMargin + Math.Max(0, game.GridWidth - 1) * cellSize + 10;
                 ballDx = -6f;
             }
 
@@ -239,14 +239,14 @@ namespace PointGame.Forms
             }
 
             // Out of grid bounds
-            if (ballX < cannonMargin - 20 || ballX > cannonMargin + game.GridWidth * cellSize + 20)
+            if (ballX < cannonMargin - 20 || ballX > cannonMargin + Math.Max(0, game.GridWidth - 1) * cellSize + 20)
             {
                 EndShot(false);
                 return;
             }
 
             // Check every intersection on the ball's row for a hit
-            for (int gx = 0; gx <= game.GridWidth; gx++)
+            for (int gx = 0; gx < game.GridWidth; gx++)
             {
                 float ipx = IntersectionPxX(gx);
                 float dist = Math.Abs(ballX - ipx);
@@ -331,7 +331,7 @@ namespace PointGame.Forms
                     UpdateStatus();
                     gridPanel.Invalidate();
                 }
-                else if (game.CurrentTurn == 2 && e.X > cannonMargin + game.GridWidth * cellSize)
+                else if (game.CurrentTurn == 2 && e.X > cannonMargin + Math.Max(0, game.GridWidth - 1) * cellSize)
                 {
                     cannon2Y = snappedY;
                     UpdateStatus();
@@ -350,10 +350,10 @@ namespace PointGame.Forms
 
             // Grid lines
             Pen gridPen = new Pen(Color.LightGray, 1);
-            for (int i = 0; i <= game.GridWidth; i++)
-                g.DrawLine(gridPen, IntersectionPxX(i), IntersectionPxY(0), IntersectionPxX(i), IntersectionPxY(game.GridHeight));
-            for (int j = 0; j <= game.GridHeight; j++)
-                g.DrawLine(gridPen, IntersectionPxX(0), IntersectionPxY(j), IntersectionPxX(game.GridWidth), IntersectionPxY(j));
+            for (int i = 0; i < game.GridWidth; i++)
+                g.DrawLine(gridPen, IntersectionPxX(i), IntersectionPxY(0), IntersectionPxX(i), IntersectionPxY(game.GridHeight - 1));
+            for (int j = 0; j < game.GridHeight; j++)
+                g.DrawLine(gridPen, IntersectionPxX(0), IntersectionPxY(j), IntersectionPxX(game.GridWidth - 1), IntersectionPxY(j));
 
             Color c1 = ColorTranslator.FromHtml(game.Player1Color);
             Color c2 = ColorTranslator.FromHtml(game.Player2Color);
@@ -411,7 +411,7 @@ namespace PointGame.Forms
             }
             else
             {
-                cx = cannonMargin + game.GridWidth * cellSize + 5;
+                cx = cannonMargin + Math.Max(0, game.GridWidth - 1) * cellSize + 5;
                 using var brush = new SolidBrush(color);
                 g.FillRectangle(brush, cx, cy, cannonW, cannonH);
                 g.FillRectangle(brush, cx - 10, cy + cannonH / 2 - 3, 10, 6);

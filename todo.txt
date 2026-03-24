@@ -39,3 +39,6 @@ quand on vise, c'est pas obliger que l'endroit oou l'on vise ce soit une interse
 apres tir, si on touche un point adverse, le tour lui reviens
 
 on ne vise pas, x est definit par la position du canon et y est definit par rapport a la puissance, la balle suit la ligne ou est placee le canon avant de tirer
+
+pour la taille de la grille, on va prendre 9*9 en tant que reference, il y aura 9 lignes et 9 colonnes, du coup, c'est en fonction de ca qu'on calcule la puissance avec la regle de trois
+la taille de la grille peut etre pareil n*n ou pas n*m, la regele de trois doit s'adapter selon ca
