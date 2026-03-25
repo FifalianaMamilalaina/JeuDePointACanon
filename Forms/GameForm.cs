@@ -217,8 +217,9 @@ namespace PointGame.Forms
                 ballDx = -6f;
             }
 
-            // Power = rule of three relative to gridWidth: power/9 * gridWidth cells
-            ballMaxDist = ((float)shotPower / 9f) * game.GridWidth * cellSize;
+            // Power = rule of three relative to gridWidth, rounded to nearest full cell
+            int targetCells = (int)Math.Round((double)shotPower * game.GridWidth / 9.0, MidpointRounding.AwayFromZero);
+            ballMaxDist = targetCells * cellSize;
             ballDistTraveled = 0;
 
             ballFlying = true;

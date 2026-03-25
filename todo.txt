@@ -42,3 +42,5 @@ on ne vise pas, x est definit par la position du canon et y est definit par rapp
 
 pour la taille de la grille, on va prendre 9*9 en tant que reference, il y aura 9 lignes et 9 colonnes, du coup, c'est en fonction de ca qu'on calcule la puissance avec la regle de trois
 la taille de la grille peut etre pareil n*n ou pas n*m, la regele de trois doit s'adapter selon ca
+
+dans la regle de trois, par exemple, si on a une grille de 15*15, ca signifie que la puissance 9 -> 15, 5 = 5*15/9 = 8.33, on arrondi a 9 eme ligne si le chiffre apres la virgulee et >= 5, sinon, on descent
