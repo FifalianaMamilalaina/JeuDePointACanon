@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PointGame")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0010f4fdc63a4e054670fef8517ab26ac3693828")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f1f936239d5fa9450e575be5e218241663139ac9")]
 [assembly: System.Reflection.AssemblyProductAttribute("PointGame")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PointGame")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

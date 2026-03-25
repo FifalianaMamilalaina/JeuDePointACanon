@@ -20,6 +20,7 @@ namespace PointGame.Services
         private int height; // number of cells vertically
         private int[,] grid;
         public List<WinResult> allLines;
+        public HashSet<(int X, int Y, int Player)> claimedSpots = new();
 
         public GameLogic(int width, int height)
         {
@@ -95,7 +96,37 @@ namespace PointGame.Services
             if (grid[x, y] == 0) return false;
             if (grid[x, y] == shooterPlayer) return false; // Cannot destroy own points
             if (IsPointInLine(x, y)) return false; // Cannot destroy line points
+            int victim = grid[x, y];
             grid[x, y] = 0;
+            // The victim now claims this spot for future reclaim
+            claimedSpots.Add((x, y, victim));
+            return true;
+        }
+
+        /// <summary>
+        /// Attempt to reclaim a previously destroyed spot.
+        /// Returns true if the spot was reclaimed (point re-placed).
+        /// </summary>
+        public bool TryReclaim(int x, int y, int shooterPlayer)
+        {
+            if (!claimedSpots.Contains((x, y, shooterPlayer))) return false;
+
+            int occupant = grid[x, y];
+            if (occupant == shooterPlayer) return false; // already has own point there
+
+            if (occupant != 0)
+            {
+                // Spot occupied by opponent
+                if (IsPointInLine(x, y)) return false; // opponent point is in a line, protected
+                // Remove opponent point (this creates a claim for them too)
+                int opponentPlayer = occupant;
+                grid[x, y] = 0;
+                claimedSpots.Add((x, y, opponentPlayer));
+            }
+
+            // Re-place the shooter's point
+            grid[x, y] = shooterPlayer;
+            claimedSpots.Remove((x, y, shooterPlayer));
             return true;
         }
 

@@ -56,6 +56,10 @@ namespace PointGame.Forms
             
             winLines = this.logic.ReplayAndGetWinLines(moves);
 
+            // Load claimed spots if resuming a saved game
+            if (game.Id > 0)
+                logic.claimedSpots = dbService.GetClaimedSpots(game.Id);
+
             cannon1Y = game.GridHeight / 2;
             cannon2Y = game.GridHeight / 2;
 
@@ -148,6 +152,7 @@ namespace PointGame.Forms
                     game.Id = dbService.CreateGame(game);
                 dbService.SaveMovesBulk(game.Id, moves);
                 dbService.UpdateGameState(game.Id, game.CurrentTurn, game.Player1Score, game.Player2Score);
+                dbService.SaveClaimedSpots(game.Id, logic.claimedSpots);
                 UpdateFormTitle();
                 MessageBox.Show("Game saved successfully!", "Save");
             }
@@ -242,10 +247,27 @@ namespace PointGame.Forms
             if (ballDistTraveled >= ballMaxDist)
             {
                 bool hit = false;
-                // Only effectively "hit" if the target grid point is within bounds
                 if (ballTargetXGrid >= 0 && ballTargetXGrid < game.GridWidth)
                 {
-                    if (logic.RemovePoint(ballTargetXGrid, ballRow, game.CurrentTurn))
+                    // First: try to reclaim a previously destroyed spot
+                    if (logic.TryReclaim(ballTargetXGrid, ballRow, game.CurrentTurn))
+                    {
+                        // Remove any opponent move at that position
+                        moves.RemoveAll(m => m.X == ballTargetXGrid && m.Y == ballRow);
+                        // Re-add our own point
+                        moves.Add(new Move
+                        {
+                            GameId = game.Id,
+                            X = ballTargetXGrid,
+                            Y = ballRow,
+                            PlayerNumber = game.CurrentTurn,
+                            MoveOrder = moves.Count + 1
+                        });
+                        for (int i = 0; i < moves.Count; i++) moves[i].MoveOrder = i + 1;
+                        hit = true;
+                    }
+                    // Otherwise: normal destroy
+                    else if (logic.RemovePoint(ballTargetXGrid, ballRow, game.CurrentTurn))
                     {
                         moves.RemoveAll(m => m.X == ballTargetXGrid && m.Y == ballRow);
                         for (int i = 0; i < moves.Count; i++) moves[i].MoveOrder = i + 1;

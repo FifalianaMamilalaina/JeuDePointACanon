@@ -20,7 +20,16 @@ namespace PointGame.Services
             {
                 using var conn = new NpgsqlConnection(connectionString);
                 conn.Open();
-                using var cmd = new NpgsqlCommand("ALTER TABLE games ADD COLUMN IF NOT EXISTS player1_score INT DEFAULT 0; ALTER TABLE games ADD COLUMN IF NOT EXISTS player2_score INT DEFAULT 0;", conn);
+                using var cmd = new NpgsqlCommand(@"
+                    ALTER TABLE games ADD COLUMN IF NOT EXISTS player1_score INT DEFAULT 0;
+                    ALTER TABLE games ADD COLUMN IF NOT EXISTS player2_score INT DEFAULT 0;
+                    CREATE TABLE IF NOT EXISTS claimed_spots (
+                        id SERIAL PRIMARY KEY,
+                        game_id INT REFERENCES games(id) ON DELETE CASCADE,
+                        x INT NOT NULL,
+                        y INT NOT NULL,
+                        player_number INT NOT NULL
+                    );", conn);
                 cmd.ExecuteNonQuery();
             }
             catch { /* Ignore if it fails, maybe tables don't exist yet */ }
@@ -166,6 +175,45 @@ namespace PointGame.Services
                 });
             }
             return games;
+        }
+
+        public void SaveClaimedSpots(int gameId, HashSet<(int X, int Y, int Player)> claimedSpots)
+        {
+            using var conn = new NpgsqlConnection(connectionString);
+            conn.Open();
+
+            using var cmdDel = new NpgsqlCommand("DELETE FROM claimed_spots WHERE game_id = @id", conn);
+            cmdDel.Parameters.AddWithValue("id", gameId);
+            cmdDel.ExecuteNonQuery();
+
+            foreach (var s in claimedSpots)
+            {
+                using var cmd = new NpgsqlCommand("INSERT INTO claimed_spots (game_id, x, y, player_number) VALUES (@g, @x, @y, @p)", conn);
+                cmd.Parameters.AddWithValue("g", gameId);
+                cmd.Parameters.AddWithValue("x", s.X);
+                cmd.Parameters.AddWithValue("y", s.Y);
+                cmd.Parameters.AddWithValue("p", s.Player);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public HashSet<(int X, int Y, int Player)> GetClaimedSpots(int gameId)
+        {
+            var spots = new HashSet<(int, int, int)>();
+            try
+            {
+                using var conn = new NpgsqlConnection(connectionString);
+                conn.Open();
+                using var cmd = new NpgsqlCommand("SELECT x, y, player_number FROM claimed_spots WHERE game_id = @id", conn);
+                cmd.Parameters.AddWithValue("id", gameId);
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    spots.Add((reader.GetInt32(0), reader.GetInt32(1), reader.GetInt32(2)));
+                }
+            }
+            catch { /* table may not exist yet */ }
+            return spots;
         }
     }
 }

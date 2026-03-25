@@ -25,11 +25,18 @@ Chaque joueur possède un canon situé sur le côté (Gauche pour P1, Droite pou
 * **Tir Horizontal** : On ne vise plus manuellement. La balle part **strictement à l'horizontale** depuis la position du canon.
 * **Puissance (Règle de 3)** : La puissance (Ctrl + 1 à 9) définit la distance maximale horizontale. Elle est proportionnelle à la largeur de la grille et arrondie mathématiquement à l'unité la plus proche (ex: Puissance 9 = toute la largeur).
 * **Effets du Tir** : 
-    * La balle détruit le premier point adverse (hors ligne) qu'elle rencontre.
+    * La balle ne détruit que le point situé **exactement à la distance choisie** (pas en chemin).
     * **Récupération du tour** : Si vous touchez un point adverse, vous **rejouez immédiatement**. Sinon, le tour passe à l'adversaire.
     * **Pas de tir allié** : Vos propres points sont immunisés.
     * **Protection** : Les points dans une ligne validée sont indestructibles.
 * *Localisation :* Gestion dans `GameForm.cs` (FireBall / BallTimer_Tick) et `GameLogic.RemovePoint`.
+
+### 4. Mécanique de Récupération (Claimed Spots)
+* Quand un de vos points est **détruit** par un tir adverse, l'emplacement est automatiquement **revendiqué** par vous.
+* Si vous tirez ensuite sur **cet emplacement exact**, votre point **revient** — même si un point adverse y a été posé entre-temps (il sera alors détruit et remplacé).
+* **Exception** : Si le point adverse à cet emplacement fait partie d'une **ligne validée**, la récupération échoue.
+* Les revendications sont **persistées** en base de données (table `claimed_spots`) et survivent aux sauvegardes/chargements.
+* *Localisation :* `GameLogic.TryReclaim`, `DatabaseService.SaveClaimedSpots/GetClaimedSpots`.
 
 ## 📂 Structure du Projet
 * **`/Forms`** : Contient l'interface utilisateur.
@@ -40,6 +47,7 @@ Chaque joueur possède un canon situé sur le côté (Gauche pour P1, Droite pou
 * **`/Models`** : Définition des données.
     * `Game.cs` : Objet représentant une partie.
     * `Move.cs` : Objet représentant un coup joué.
+    * `ClaimedSpot.cs` : Emplacement revendiqué après destruction.
 * **`/Services`** : Logique métier.
     * `GameLogic.cs` : Moteur de règles (victoire, collisions, validation).
     * `DatabaseService.cs` : Communication avec PostgreSQL (Npgsql).

@@ -49,3 +49,8 @@ on va aider l'utilisateur a la puissance, dans le code actuel, quand on choisi d
 maintenant, je veux que apres qu'on choisi la puissance, il y a une ligne qui affiche da distance a laquelle la bale peut arriver selon la puissance
 
 on regarde pas les trajectoires, si on a un point rouge a un et un autre rouge a 3, si on tire depuis bleu, si on choisi puissance 1, le point rouge doit disparaitre, mais, si  on choisi 3 comme puissance, 1 ne disparait pass, c'est 3 qui disparait
+
+
+
+quand on tire, oet qu'on enleve un point adverse, tout le monde peut utiliser l'enmplacement, mais quand le joueur a qui le point a ete enlever, tire a cet endroit meme(si l'emplacement n'est pas encore utiliser par lui meme), meme si il y a deja un point adverse, sa balle enleve le point adverse et remet un point a lui a l'emplacement, sauf si l'adverse a deja un point qui est dans une ligne
+on doit sauvegarder les anciens emplacements quelques pars, et si on save le jeu, puis on le load, c'est la meme chose, si il tire la ou son point a deja ete enlever, son point reviens
