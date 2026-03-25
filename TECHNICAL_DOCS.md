@@ -18,7 +18,7 @@ C'est le fichier le plus critique pour les règles.
 * **Algorithme de Victoire** : Lorsqu'un alignement de 5 points ou plus est détecté, le jeu extrait un segment d'**exactement 5 points** incluant la pièce posée. C'est ce segment qui est validé comme ligne gagnante.
 * **Validation de Partage** : `SharesMoreThanOnePointWithAnyExistingLine` garantit qu'une nouvelle ligne ne partage pas plus d'un point avec une ligne existante.
 * **Intersection de Diagonales** : `DoesLineCrossOpponent` empêche de croiser physiquement une ligne adverse.
-* **Claimed Spots** : `HashSet<(int X, int Y, int Player)> claimedSpots` stocke les emplacements revendiqués. `RemovePoint` ajoute une entrée pour la victime. `TryReclaim` vérifie si le tireur a une revendication, retire le point adverse (si présent et non en ligne), repose le point du joueur, puis supprime la revendication.
+* **Claimed Spots** : `HashSet<(int X, int Y, int Player)> claimedSpots` stocke les emplacements revendiqués. `RemovePoint` ajoute une entrée pour la victime. `TryReclaim` vérifie si le tireur a une revendication, retire le point adverse (si présent et non en ligne), repose le point du joueur, puis supprime la revendication. `PlaceMove_CheckOnly` vérifie ensuite si ce point complète une ligne de 5.
 
 ### 2. Interface de Jeu (`GameForm.cs`)
 Gère le rendu graphique et les événements.

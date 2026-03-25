@@ -80,6 +80,20 @@ namespace PointGame.Services
             return wins;
         }
 
+        /// <summary>
+        /// Check for win lines at a position that is already placed on the grid.
+        /// Used after TryReclaim to validate lines without re-placing the point.
+        /// </summary>
+        public List<WinResult> PlaceMove_CheckOnly(int x, int y, int player)
+        {
+            var wins = CheckWin(x, y, player);
+            foreach (var w in wins)
+            {
+                allLines.Add(w);
+            }
+            return wins;
+        }
+
         public bool IsPointInLine(int x, int y)
         {
             Point p = new Point(x, y);

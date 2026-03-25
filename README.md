@@ -36,7 +36,8 @@ Chaque joueur possède un canon situé sur le côté (Gauche pour P1, Droite pou
 * Si vous tirez ensuite sur **cet emplacement exact**, votre point **revient** — même si un point adverse y a été posé entre-temps (il sera alors détruit et remplacé).
 * **Exception** : Si le point adverse à cet emplacement fait partie d'une **ligne validée**, la récupération échoue.
 * Les revendications sont **persistées** en base de données (table `claimed_spots`) et survivent aux sauvegardes/chargements.
-* *Localisation :* `GameLogic.TryReclaim`, `DatabaseService.SaveClaimedSpots/GetClaimedSpots`.
+* **Validation de ligne** : Si un point récupéré complète un alignement de 5, la ligne est **automatiquement validée** et le score mis à jour.
+* *Localisation :* `GameLogic.TryReclaim`, `GameLogic.PlaceMove_CheckOnly`, `DatabaseService.SaveClaimedSpots/GetClaimedSpots`.
 
 ## 📂 Structure du Projet
 * **`/Forms`** : Contient l'interface utilisateur.

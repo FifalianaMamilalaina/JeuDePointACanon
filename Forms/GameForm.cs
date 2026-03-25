@@ -264,6 +264,16 @@ namespace PointGame.Forms
                             MoveOrder = moves.Count + 1
                         });
                         for (int i = 0; i < moves.Count; i++) moves[i].MoveOrder = i + 1;
+
+                        // Check if reclaimed point completes a line of 5
+                        var wins = logic.PlaceMove_CheckOnly(ballTargetXGrid, ballRow, game.CurrentTurn);
+                        if (wins.Count > 0)
+                        {
+                            winLines.AddRange(wins);
+                            if (game.CurrentTurn == 1) game.Player1Score += wins.Count;
+                            else game.Player2Score += wins.Count;
+                        }
+
                         hit = true;
                     }
                     // Otherwise: normal destroy
