@@ -44,3 +44,8 @@ pour la taille de la grille, on va prendre 9*9 en tant que reference, il y aura 
 la taille de la grille peut etre pareil n*n ou pas n*m, la regele de trois doit s'adapter selon ca
 
 dans la regle de trois, par exemple, si on a une grille de 15*15, ca signifie que la puissance 9 -> 15, 5 = 5*15/9 = 8.33, on arrondi a 9 eme ligne si le chiffre apres la virgulee et >= 5, sinon, on descent
+
+on va aider l'utilisateur a la puissance, dans le code actuel, quand on choisi de tirer, il y a une ligne un peu jaune qui est sur la ligne ou se trouve le canon
+maintenant, je veux que apres qu'on choisi la puissance, il y a une ligne qui affiche da distance a laquelle la bale peut arriver selon la puissance
+
+on regarde pas les trajectoires, si on a un point rouge a un et un autre rouge a 3, si on tire depuis bleu, si on choisi puissance 1, le point rouge doit disparaitre, mais, si  on choisi 3 comme puissance, 1 ne disparait pass, c'est 3 qui disparait

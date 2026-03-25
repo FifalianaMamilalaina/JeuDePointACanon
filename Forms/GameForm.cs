@@ -41,6 +41,7 @@ namespace PointGame.Forms
         private float ballMaxDist;
         private bool ballFlying = false;
         private int ballRow;           // grid row the ball travels on
+        private int ballTargetXGrid;   // the final Grid X intersection the ball targets
 
         public GameForm(Game game, DatabaseService dbService)
         {
@@ -204,22 +205,27 @@ namespace PointGame.Forms
             ballRow = cannonRow;
             ballY = IntersectionPxY(cannonRow);
 
+            int targetCells = (int)Math.Round((double)shotPower * game.GridWidth / 9.0, MidpointRounding.AwayFromZero);
+            ballTargetXGrid = game.CurrentTurn == 1 ? targetCells - 1 : game.GridWidth - targetCells;
+            ballTargetXGrid = Math.Max(0, Math.Min(ballTargetXGrid, game.GridWidth - 1));
+
+            float startPxX;
             if (game.CurrentTurn == 1)
             {
                 // P1: fires from left → right
-                ballX = cannonMargin - 10;
+                startPxX = cannonMargin - 10;
                 ballDx = 6f;
             }
             else
             {
                 // P2: fires from right → left
-                ballX = cannonMargin + Math.Max(0, game.GridWidth - 1) * cellSize + 10;
+                startPxX = cannonMargin + Math.Max(0, game.GridWidth - 1) * cellSize + 10;
                 ballDx = -6f;
             }
 
-            // Power = rule of three relative to gridWidth, rounded to nearest full cell
-            int targetCells = (int)Math.Round((double)shotPower * game.GridWidth / 9.0, MidpointRounding.AwayFromZero);
-            ballMaxDist = targetCells * cellSize;
+            ballX = startPxX;
+            float targetPxX = IntersectionPxX(ballTargetXGrid);
+            ballMaxDist = Math.Abs(targetPxX - startPxX);
             ballDistTraveled = 0;
 
             ballFlying = true;
@@ -232,10 +238,21 @@ namespace PointGame.Forms
             ballX += ballDx;
             ballDistTraveled += Math.Abs(ballDx);
 
-            // Out of power
+            // Reached destination distance
             if (ballDistTraveled >= ballMaxDist)
             {
-                EndShot(false);
+                bool hit = false;
+                // Only effectively "hit" if the target grid point is within bounds
+                if (ballTargetXGrid >= 0 && ballTargetXGrid < game.GridWidth)
+                {
+                    if (logic.RemovePoint(ballTargetXGrid, ballRow, game.CurrentTurn))
+                    {
+                        moves.RemoveAll(m => m.X == ballTargetXGrid && m.Y == ballRow);
+                        for (int i = 0; i < moves.Count; i++) moves[i].MoveOrder = i + 1;
+                        hit = true;
+                    }
+                }
+                EndShot(hit);
                 return;
             }
 
@@ -244,23 +261,6 @@ namespace PointGame.Forms
             {
                 EndShot(false);
                 return;
-            }
-
-            // Check every intersection on the ball's row for a hit
-            for (int gx = 0; gx < game.GridWidth; gx++)
-            {
-                float ipx = IntersectionPxX(gx);
-                float dist = Math.Abs(ballX - ipx);
-                if (dist < Math.Abs(ballDx) + 2) // close enough to snap to intersection
-                {
-                    if (logic.RemovePoint(gx, ballRow, game.CurrentTurn))
-                    {
-                        moves.RemoveAll(m => m.X == gx && m.Y == ballRow);
-                        for (int i = 0; i < moves.Count; i++) moves[i].MoveOrder = i + 1;
-                        EndShot(true); // hit → shooter keeps turn
-                        return;
-                    }
-                }
             }
 
             gridPanel.Invalidate();
@@ -366,6 +366,24 @@ namespace PointGame.Forms
                 int ry = IntersectionPxY(activeRow);
                 using var rowBrush = new SolidBrush(Color.FromArgb(30, Color.Orange));
                 g.FillRectangle(rowBrush, IntersectionPxX(0), ry - pointRadius, game.GridWidth * cellSize, pointRadius * 2);
+
+                if (shotPower > 0)
+                {
+                    int targetCells = (int)Math.Round((double)shotPower * game.GridWidth / 9.0, MidpointRounding.AwayFromZero);
+                    int targetXGrid = game.CurrentTurn == 1 ? targetCells - 1 : game.GridWidth - targetCells;
+                    targetXGrid = Math.Max(0, Math.Min(targetXGrid, game.GridWidth - 1));
+
+                    using var powerPen = new Pen(Color.Red, 3) { DashStyle = DashStyle.Dash };
+                    int startX = game.CurrentTurn == 1 ? IntersectionPxX(0) - 10 : IntersectionPxX(game.GridWidth - 1) + 10;
+                    int endX = IntersectionPxX(targetXGrid);
+
+                    g.DrawLine(powerPen, startX, ry, endX, ry);
+
+                    // Crosshair exactly at the target intersection
+                    using var strongRed = new Pen(Color.Red, 2);
+                    g.DrawLine(strongRed, endX - 6, ry - 6, endX + 6, ry + 6);
+                    g.DrawLine(strongRed, endX - 6, ry + 6, endX + 6, ry - 6);
+                }
             }
 
             // Points
