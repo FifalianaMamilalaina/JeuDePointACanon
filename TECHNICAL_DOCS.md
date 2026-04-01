@@ -50,9 +50,8 @@ Rendez-vous dans `GameForm.cs` -> `GridPanel_Paint`.
 
 ### Ajuster la Puissance des Canons
 La logique se trouve dans `GameForm.cs` -> `FireBall`.
-* La distance max (`ballMaxDist`) suit la règle de trois basée sur `shotPower` (1-9) et la largeur réelle de la grille (`game.GridWidth`).
-* Le résultat est arrondi à l'entier le plus proche via `MidpointRounding.AwayFromZero` pour garantir que la balle s'arrête pile sur une intersection.
-* Une puissance de 9 permet de traverser toute la largeur configurée.
+* La formule est : `targetIndex = round((power - 1) * (GridWidth - 1) / 8)`. Puissance 1 cible toujours la 1ère intersection (index 0), Puissance 9 cible la dernière (index GridWidth-1).
+* Le résultat est arrondi à l'entier le plus proche via `MidpointRounding.AwayFromZero`.
 
 ---
 

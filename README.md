@@ -23,7 +23,7 @@ Chaque joueur possède un canon situé sur le côté (Gauche pour P1, Droite pou
 * **Déplacement** : Le canon se déplace verticalement avec les **flèches Haut/Bas** ou par **clic direct** dans la zone du canon (marges).
 * **Mode Tir** : Le joueur bascule en mode tir via le bouton "Switch to Shoot". La ligne sur laquelle se trouve le canon est alors surlignée.
 * **Tir Horizontal** : On ne vise plus manuellement. La balle part **strictement à l'horizontale** depuis la position du canon.
-* **Puissance (Règle de 3)** : La puissance (Ctrl + 1 à 9) définit la distance maximale horizontale. Elle est proportionnelle à la largeur de la grille et arrondie mathématiquement à l'unité la plus proche (ex: Puissance 9 = toute la largeur).
+* **Puissance (Règle de 3)** : La puissance (Ctrl + 1 à 9) définit la distance horizontale. **Puissance 1 = première intersection, Puissance 9 = dernière intersection**, quelle que soit la taille de la grille.
 * **Effets du Tir** : 
     * La balle ne détruit que le point situé **exactement à la distance choisie** (pas en chemin).
     * **Récupération du tour** : Si vous touchez un point adverse, vous **rejouez immédiatement**. Sinon, le tour passe à l'adversaire.

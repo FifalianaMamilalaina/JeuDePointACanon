@@ -210,8 +210,10 @@ namespace PointGame.Forms
             ballRow = cannonRow;
             ballY = IntersectionPxY(cannonRow);
 
-            int targetCells = (int)Math.Round((double)shotPower * game.GridWidth / 9.0, MidpointRounding.AwayFromZero);
-            ballTargetXGrid = game.CurrentTurn == 1 ? targetCells - 1 : game.GridWidth - targetCells;
+            // Power maps: 1 → first intersection (index 0), 9 → last intersection (index GridWidth-1)
+            // Rule of three: targetIndex = round((power - 1) * (GridWidth - 1) / 8)
+            int targetIndex = (int)Math.Round((double)(shotPower - 1) * (game.GridWidth - 1) / 8.0, MidpointRounding.AwayFromZero);
+            ballTargetXGrid = game.CurrentTurn == 1 ? targetIndex : game.GridWidth - 1 - targetIndex;
             ballTargetXGrid = Math.Max(0, Math.Min(ballTargetXGrid, game.GridWidth - 1));
 
             float startPxX;
