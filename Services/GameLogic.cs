@@ -300,8 +300,8 @@ namespace PointGame.Services
 
         /// <summary>
         /// Find all segments of 5 consecutive cells (in any direction) that contain
-        /// exactly 3 points of the given player and 2 empty cells,
-        /// AND where filling those 2 empties would create a VALID line (respecting rules).
+        /// exactly 3 points of the given player and 2 empty cells (no opponent blocking).
+        /// Returns the list of empty positions from those segments.
         /// </summary>
         public List<Point> FindSuggestionsForThree(int player)
         {
@@ -339,16 +339,8 @@ namespace PointGame.Services
 
                         if (playerCount == 3 && empties.Count == 2)
                         {
-                            // Temporarily fill both empties and check if the line would be valid
-                            foreach (var e in empties) grid[e.X, e.Y] = player;
-                            var wins = CheckWin(empties[0].X, empties[0].Y, player);
-                            foreach (var e in empties) grid[e.X, e.Y] = 0; // undo
-
-                            if (wins.Count > 0)
-                            {
-                                foreach (var e in empties)
-                                    suggestions.Add(e);
-                            }
+                            foreach (var e in empties)
+                                suggestions.Add(e);
                         }
                     }
                 }

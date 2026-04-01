@@ -70,3 +70,12 @@ mais apres, si j'utilise le Nombre de quatre qu'il  a suggerer, ca signifie que 
 mais apres ca suggere toujours le meme nombre, meme si en un coup, je peux pas recreer une nouvelle ligene
 
 tu comprends?
+
+dans le nombre de 3, si on a 3 points rougge alignes, un vide a la gauche et un point bleu a la gauche du vide, et tout a droite des 3 points, 2 alignes
+si on fait Nombre de trois, il n'y a que les 2 a droite, pourquoi
+parce que, deja la regle c'est il DOIT aligner une ligne en deux coup pour le Nombre de trois
+si un bleu est poser sur le  vide a gauche, cela signifie que le nombre de trois reste 2, ceux a droite, un point rouge est poser et le bleu a encore la possibilite de gacher la ligne
+
+du coup, on va plus compter
+
+tu comprends?
