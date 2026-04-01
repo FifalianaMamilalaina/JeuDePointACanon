@@ -300,8 +300,8 @@ namespace PointGame.Services
 
         /// <summary>
         /// Find all segments of 5 consecutive cells (in any direction) that contain
-        /// exactly 3 points of the given player and 2 empty cells.
-        /// Returns the list of empty positions from those segments.
+        /// exactly 3 points of the given player and 2 empty cells,
+        /// AND where filling those 2 empties would create a VALID line (respecting rules).
         /// </summary>
         public List<Point> FindSuggestionsForThree(int player)
         {
@@ -317,7 +317,6 @@ namespace PointGame.Services
                 {
                     foreach (var dir in directions)
                     {
-                        // Build a window of 5 cells starting at (x,y)
                         List<Point> segment = new List<Point>();
                         bool valid = true;
                         for (int i = 0; i < 5; i++)
@@ -325,7 +324,7 @@ namespace PointGame.Services
                             int nx = x + dir[0] * i, ny = y + dir[1] * i;
                             if (nx < 0 || nx >= width || ny < 0 || ny >= height) { valid = false; break; }
                             int cell = grid[nx, ny];
-                            if (cell != 0 && cell != player) { valid = false; break; } // opponent blocks this segment
+                            if (cell != 0 && cell != player) { valid = false; break; }
                             segment.Add(new Point(nx, ny));
                         }
                         if (!valid || segment.Count != 5) continue;
@@ -340,8 +339,16 @@ namespace PointGame.Services
 
                         if (playerCount == 3 && empties.Count == 2)
                         {
-                            foreach (var e in empties)
-                                suggestions.Add(e);
+                            // Temporarily fill both empties and check if the line would be valid
+                            foreach (var e in empties) grid[e.X, e.Y] = player;
+                            var wins = CheckWin(empties[0].X, empties[0].Y, player);
+                            foreach (var e in empties) grid[e.X, e.Y] = 0; // undo
+
+                            if (wins.Count > 0)
+                            {
+                                foreach (var e in empties)
+                                    suggestions.Add(e);
+                            }
                         }
                     }
                 }
