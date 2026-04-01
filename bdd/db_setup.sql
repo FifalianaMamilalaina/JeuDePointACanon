@@ -21,3 +21,11 @@ CREATE TABLE moves (
     player_number INT NOT NULL,
     move_order INT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS claimed_spots (
+    id SERIAL PRIMARY KEY,
+    game_id INT REFERENCES games(id) ON DELETE CASCADE,
+    x INT NOT NULL,
+    y INT NOT NULL,
+    player_number INT NOT NULL
+);
