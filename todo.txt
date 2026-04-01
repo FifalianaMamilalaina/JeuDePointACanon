@@ -54,3 +54,13 @@ on regarde pas les trajectoires, si on a un point rouge a un et un autre rouge a
 
 quand on tire, oet qu'on enleve un point adverse, tout le monde peut utiliser l'enmplacement, mais quand le joueur a qui le point a ete enlever, tire a cet endroit meme(si l'emplacement n'est pas encore utiliser par lui meme), meme si il y a deja un point adverse, sa balle enleve le point adverse et remet un point a lui a l'emplacement, sauf si l'adverse a deja un point qui est dans une ligne
 on doit sauvegarder les anciens emplacements quelques pars, et si on save le jeu, puis on le load, c'est la meme chose, si il tire la ou son point a deja ete enlever, son point reviens
+
+
+
+systeme de suggestion:
+
+il suggere de placer un point tant que ce point peut remplir une ligne de 5 en un coup
+ce qu'on va faire, on aura un bouton "Nombre de quatre = n" avec n = nombre de suggstion possible pour les lignes pouvant etre faits avec deja 4 points
+quand on appuye dessus, on verra sur l'ecran les suposition ou on peut poser les points et c'est qu joureur de decider ou poser son prochain point(possible sur les suggestion et possible pas)
+un autre bouton: "Nombre de trois = n", pareil comme pour le nombre de quatre, quans une ligne peut etre creer sur 3 points apres 2 tour, n++, quand on appuye dessus, ca affiche les possibilites sur l'ecran
+pour nombre de trois, voici la possibilites avec x place libre et . des points de meme couleurs xx...xx

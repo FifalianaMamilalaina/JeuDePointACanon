@@ -43,6 +43,13 @@ namespace PointGame.Forms
         private int ballRow;           // grid row the ball travels on
         private int ballTargetXGrid;   // the final Grid X intersection the ball targets
 
+        // Suggestion state
+        private List<Point> currentSuggestions = new List<Point>();
+        private bool showingFour = false;
+        private bool showingThree = false;
+        private Button btnFour;
+        private Button btnThree;
+
         public GameForm(Game game, DatabaseService dbService)
         {
             this.game = game;
@@ -70,7 +77,7 @@ namespace PointGame.Forms
             int panelHeight = Math.Max(0, game.GridHeight - 1) * cellSize;
 
             UpdateFormTitle();
-            this.Size = new Size(Math.Max(560, panelWidth + 60), panelHeight + 140);
+            this.Size = new Size(Math.Max(560, panelWidth + 60), panelHeight + 180);
             this.StartPosition = FormStartPosition.CenterScreen;
 
             gridPanel = new Panel
@@ -122,6 +129,34 @@ namespace PointGame.Forms
             this.Controls.Add(btnFire);
             this.Controls.Add(lblStatus);
 
+            // Suggestion buttons — second row
+            int row2Y = bottomY + 35;
+            btnFour = new Button { Text = "Nombre de quatre = 0", Location = new Point(20, row2Y), Size = new Size(180, 30) };
+            btnFour.Click += (s, e) => {
+                showingThree = false;
+                showingFour = !showingFour;
+                if (showingFour)
+                    currentSuggestions = logic.FindSuggestionsForFour(game.CurrentTurn);
+                else
+                    currentSuggestions.Clear();
+                gridPanel.Invalidate();
+            };
+
+            btnThree = new Button { Text = "Nombre de trois = 0", Location = new Point(210, row2Y), Size = new Size(180, 30) };
+            btnThree.Click += (s, e) => {
+                showingFour = false;
+                showingThree = !showingThree;
+                if (showingThree)
+                    currentSuggestions = logic.FindSuggestionsForThree(game.CurrentTurn);
+                else
+                    currentSuggestions.Clear();
+                gridPanel.Invalidate();
+            };
+
+            this.Controls.Add(btnFour);
+            this.Controls.Add(btnThree);
+            UpdateSuggestionCounts();
+
             ballTimer = new System.Windows.Forms.Timer { Interval = 30 };
             ballTimer.Tick += BallTimer_Tick;
         }
@@ -142,6 +177,18 @@ namespace PointGame.Forms
 
             if (this.Tag is Button fireBtn)
                 fireBtn.Enabled = (currentMode == ActionMode.Shoot && shotPower > 0 && !ballFlying);
+        }
+
+        private void UpdateSuggestionCounts()
+        {
+            int fourCount = logic.FindSuggestionsForFour(game.CurrentTurn).Count;
+            int threeCount = logic.FindSuggestionsForThree(game.CurrentTurn).Count;
+            btnFour.Text = $"Nombre de quatre = {fourCount}";
+            btnThree.Text = $"Nombre de trois = {threeCount}";
+            // Clear shown suggestions when counts refresh (new turn)
+            currentSuggestions.Clear();
+            showingFour = false;
+            showingThree = false;
         }
 
         private void BtnSave_Click(object sender, EventArgs e)
@@ -312,6 +359,7 @@ namespace PointGame.Forms
             
             UpdateFormTitle();
             UpdateStatus();
+            UpdateSuggestionCounts();
             gridPanel.Invalidate();
         }
 
@@ -353,6 +401,7 @@ namespace PointGame.Forms
                     
                     UpdateFormTitle();
                     UpdateStatus();
+                    UpdateSuggestionCounts();
                     gridPanel.Invalidate();
                 }
             }
@@ -403,8 +452,8 @@ namespace PointGame.Forms
 
                 if (shotPower > 0)
                 {
-                    int targetCells = (int)Math.Round((double)shotPower * game.GridWidth / 9.0, MidpointRounding.AwayFromZero);
-                    int targetXGrid = game.CurrentTurn == 1 ? targetCells - 1 : game.GridWidth - targetCells;
+                    int targetIndex = (int)Math.Round((double)(shotPower - 1) * (game.GridWidth - 1) / 8.0, MidpointRounding.AwayFromZero);
+                    int targetXGrid = game.CurrentTurn == 1 ? targetIndex : game.GridWidth - 1 - targetIndex;
                     targetXGrid = Math.Max(0, Math.Min(targetXGrid, game.GridWidth - 1));
 
                     using var powerPen = new Pen(Color.Red, 3) { DashStyle = DashStyle.Dash };
@@ -437,6 +486,28 @@ namespace PointGame.Forms
                 using var pen = new Pen(color, 4);
                 g.DrawLine(pen, IntersectionPxX(win.StartWinPoint.X), IntersectionPxY(win.StartWinPoint.Y),
                                 IntersectionPxX(win.EndWinPoint.X), IntersectionPxY(win.EndWinPoint.Y));
+            }
+
+            // Suggestion markers
+            if (currentSuggestions.Count > 0)
+            {
+                Color sugColor = game.CurrentTurn == 1 ? c1 : c2;
+                using var sugBrush = new SolidBrush(Color.FromArgb(100, sugColor));
+                using var sugPen = new Pen(sugColor, 2) { DashStyle = DashStyle.Dot };
+                foreach (var s in currentSuggestions)
+                {
+                    int sx = IntersectionPxX(s.X);
+                    int sy = IntersectionPxY(s.Y);
+                    // Draw diamond marker
+                    Point[] diamond = {
+                        new Point(sx, sy - pointRadius - 2),
+                        new Point(sx + pointRadius + 2, sy),
+                        new Point(sx, sy + pointRadius + 2),
+                        new Point(sx - pointRadius - 2, sy)
+                    };
+                    g.FillPolygon(sugBrush, diamond);
+                    g.DrawPolygon(sugPen, diamond);
+                }
             }
 
             // Ball

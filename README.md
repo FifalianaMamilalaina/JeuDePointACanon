@@ -39,6 +39,13 @@ Chaque joueur possède un canon situé sur le côté (Gauche pour P1, Droite pou
 * **Validation de ligne** : Si un point récupéré complète un alignement de 5, la ligne est **automatiquement validée** et le score mis à jour.
 * *Localisation :* `GameLogic.TryReclaim`, `GameLogic.PlaceMove_CheckOnly`, `DatabaseService.SaveClaimedSpots/GetClaimedSpots`.
 
+### 5. Système de Suggestions
+* **Nombre de quatre** : Affiche les emplacements où poser un point pour compléter une ligne de 5 en un coup (4 points déjà alignés).
+* **Nombre de trois** : Affiche les emplacements potentiels pour les segments de 5 contenant déjà 3 points alliés et 2 places libres.
+* Les suggestions sont affichées sous forme de **losanges semi-transparents** sur la grille.
+* Les boutons indiquent le nombre de possibilités et se mettent à jour après chaque coup.
+* *Localisation :* `GameLogic.FindSuggestionsForFour/Three`, `GameForm.cs` (UI + Paint).
+
 ## 📂 Structure du Projet
 * **`/Forms`** : Contient l'interface utilisateur.
     * `MainMenuForm.cs` : Écran d'accueil.

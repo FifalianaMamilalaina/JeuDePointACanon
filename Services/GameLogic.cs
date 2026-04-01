@@ -272,5 +272,103 @@ namespace PointGame.Services
             }
             return false;
         }
+
+        /// <summary>
+        /// Find all empty positions where placing a point would complete a line of exactly 5.
+        /// Returns the list of empty positions (suggestions).
+        /// </summary>
+        public List<Point> FindSuggestionsForFour(int player)
+        {
+            var suggestions = new HashSet<Point>();
+            int[][] directions = new int[][] {
+                new int[] { 1, 0 }, new int[] { 0, 1 },
+                new int[] { 1, 1 }, new int[] { 1, -1 }
+            };
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    if (grid[x, y] != 0) continue; // must be empty
+
+                    // Temporarily place the point
+                    grid[x, y] = player;
+                    foreach (var dir in directions)
+                    {
+                        List<Point> line = new List<Point> { new Point(x, y) };
+                        for (int i = 1; i < 50; i++)
+                        {
+                            int nx = x + dir[0] * i, ny = y + dir[1] * i;
+                            if (nx < 0 || nx >= width || ny < 0 || ny >= height || grid[nx, ny] != player) break;
+                            line.Add(new Point(nx, ny));
+                        }
+                        for (int i = 1; i < 50; i++)
+                        {
+                            int nx = x - dir[0] * i, ny = y - dir[1] * i;
+                            if (nx < 0 || nx >= width || ny < 0 || ny >= height || grid[nx, ny] != player) break;
+                            line.Insert(0, new Point(nx, ny));
+                        }
+                        if (line.Count >= 5)
+                        {
+                            suggestions.Add(new Point(x, y));
+                            break;
+                        }
+                    }
+                    grid[x, y] = 0; // undo
+                }
+            }
+            return new List<Point>(suggestions);
+        }
+
+        /// <summary>
+        /// Find all segments of 5 consecutive cells (in any direction) that contain
+        /// exactly 3 points of the given player and 2 empty cells.
+        /// Returns the list of empty positions from those segments.
+        /// </summary>
+        public List<Point> FindSuggestionsForThree(int player)
+        {
+            var suggestions = new HashSet<Point>();
+            int[][] directions = new int[][] {
+                new int[] { 1, 0 }, new int[] { 0, 1 },
+                new int[] { 1, 1 }, new int[] { 1, -1 }
+            };
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    foreach (var dir in directions)
+                    {
+                        // Build a window of 5 cells starting at (x,y)
+                        List<Point> segment = new List<Point>();
+                        bool valid = true;
+                        for (int i = 0; i < 5; i++)
+                        {
+                            int nx = x + dir[0] * i, ny = y + dir[1] * i;
+                            if (nx < 0 || nx >= width || ny < 0 || ny >= height) { valid = false; break; }
+                            int cell = grid[nx, ny];
+                            if (cell != 0 && cell != player) { valid = false; break; } // opponent blocks this segment
+                            segment.Add(new Point(nx, ny));
+                        }
+                        if (!valid || segment.Count != 5) continue;
+
+                        int playerCount = 0;
+                        var empties = new List<Point>();
+                        foreach (var p in segment)
+                        {
+                            if (grid[p.X, p.Y] == player) playerCount++;
+                            else empties.Add(p);
+                        }
+
+                        if (playerCount == 3 && empties.Count == 2)
+                        {
+                            foreach (var e in empties)
+                                suggestions.Add(e);
+                        }
+                    }
+                }
+            }
+            return new List<Point>(suggestions);
+        }
     }
 }
