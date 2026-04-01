@@ -64,3 +64,9 @@ ce qu'on va faire, on aura un bouton "Nombre de quatre = n" avec n = nombre de s
 quand on appuye dessus, on verra sur l'ecran les suposition ou on peut poser les points et c'est qu joureur de decider ou poser son prochain point(possible sur les suggestion et possible pas)
 un autre bouton: "Nombre de trois = n", pareil comme pour le nombre de quatre, quans une ligne peut etre creer sur 3 points apres 2 tour, n++, quand on appuye dessus, ca affiche les possibilites sur l'ecran
 pour nombre de trois, voici la possibilites avec x place libre et . des points de meme couleurs xx...xx
+
+quand il y a 4 points de P1 et que apres c'est le tour de P1, il suggere les oints si possible, ca deja, c'est normal
+mais apres, si j'utilise le Nombre de quatre qu'il  a suggerer, ca signifie que ca a creer ne ligne
+mais apres ca suggere toujours le meme nombre, meme si en un coup, je peux pas recreer une nouvelle ligene
+
+tu comprends?

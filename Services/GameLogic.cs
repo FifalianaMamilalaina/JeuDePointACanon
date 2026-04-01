@@ -274,46 +274,24 @@ namespace PointGame.Services
         }
 
         /// <summary>
-        /// Find all empty positions where placing a point would complete a line of exactly 5.
-        /// Returns the list of empty positions (suggestions).
+        /// Find all empty positions where placing a point would complete a VALID line of exactly 5.
+        /// Uses CheckWin which respects sharing and crossing rules.
         /// </summary>
         public List<Point> FindSuggestionsForFour(int player)
         {
             var suggestions = new HashSet<Point>();
-            int[][] directions = new int[][] {
-                new int[] { 1, 0 }, new int[] { 0, 1 },
-                new int[] { 1, 1 }, new int[] { 1, -1 }
-            };
 
             for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
                 {
-                    if (grid[x, y] != 0) continue; // must be empty
+                    if (grid[x, y] != 0) continue;
 
                     // Temporarily place the point
                     grid[x, y] = player;
-                    foreach (var dir in directions)
-                    {
-                        List<Point> line = new List<Point> { new Point(x, y) };
-                        for (int i = 1; i < 50; i++)
-                        {
-                            int nx = x + dir[0] * i, ny = y + dir[1] * i;
-                            if (nx < 0 || nx >= width || ny < 0 || ny >= height || grid[nx, ny] != player) break;
-                            line.Add(new Point(nx, ny));
-                        }
-                        for (int i = 1; i < 50; i++)
-                        {
-                            int nx = x - dir[0] * i, ny = y - dir[1] * i;
-                            if (nx < 0 || nx >= width || ny < 0 || ny >= height || grid[nx, ny] != player) break;
-                            line.Insert(0, new Point(nx, ny));
-                        }
-                        if (line.Count >= 5)
-                        {
-                            suggestions.Add(new Point(x, y));
-                            break;
-                        }
-                    }
+                    var wins = CheckWin(x, y, player);
+                    if (wins.Count > 0)
+                        suggestions.Add(new Point(x, y));
                     grid[x, y] = 0; // undo
                 }
             }
